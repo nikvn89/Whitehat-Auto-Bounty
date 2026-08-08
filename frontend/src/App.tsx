@@ -585,7 +585,7 @@ export default function App() {
 
                 {/* Fund pool */}
                 <form onSubmit={handleFundPool} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                  <div className="input-group" style={{ margin: 0, flex: 1 }}>
+                  <div className="input-group" style={{ margin: 0, width: '160px' }}>
                     <label>Fund Pool (GEN)</label>
                     <input className="input-field" type="number" min="1" step="1" value={fundAmount} onChange={e => setFundAmount(e.target.value)} />
                   </div>
@@ -604,7 +604,7 @@ export default function App() {
                 {/* Configure bounties */}
                 <form onSubmit={handleConfigureBounties}>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>Bounty Amounts (GEN)</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '0.5rem', marginBottom: '0.75rem' }}>
                     {[
                       { label: 'CRITICAL', val: cfgCritical, set: setCfgCritical, color: SEVERITY_COLOR.CRITICAL },
                       { label: 'HIGH', val: cfgHigh, set: setCfgHigh, color: SEVERITY_COLOR.HIGH },

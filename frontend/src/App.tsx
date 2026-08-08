@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getAddress } from 'viem';
 import { getClient, CONTRACT_ADDRESS } from './lib/genlayer';
 import {
   Bug,
@@ -159,7 +160,7 @@ export default function App() {
         }
       }
       if (accounts.length > 0) {
-        setWalletAddress(accounts[0]);
+        setWalletAddress(getAddress(accounts[0]));
         setWalletConnected(true);
       }
     } catch (e: any) {

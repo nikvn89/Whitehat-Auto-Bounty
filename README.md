@@ -202,23 +202,19 @@ On any other blockchain, you would need a centralized oracle or a trusted commit
 
 ## 🧑‍⚖️ Judge's Testing Guide
 
-> Everything is pre-configured. You only need MetaMask and 2 minutes.
+> Everything is pre-configured. You only need MetaMask and ~3 minutes.
 
 ### Prerequisites
-- MetaMask installed in browser
-- Any wallet (no real funds needed — this is GenLayer testnet)
+- MetaMask installed in browser ([download](https://metamask.io))
+- Any wallet — no real funds needed (GenLayer testnet)
 
-### Step 1 — Add GenLayer Network to MetaMask
-The dApp will prompt you automatically when you connect. Click **Approve** when MetaMask asks to add:
-- Network: **Genlayer Studio Network**
-- Chain ID: **61999**
-- Currency: **GEN**
-
-### Step 2 — Connect & Submit Report
-
+### Step 1 — Connect Wallet
 1. Open the dApp and click **Connect Wallet**
-2. Click **Submit Report**
-3. Copy-paste exactly:
+2. MetaMask will prompt to add **Genlayer Studio Network** automatically → click **Approve**
+
+### Step 2 — Submit Bug Report
+1. Click **Submit Report**
+2. Copy-paste **exactly**:
 
 **Bug Description:**
 ```
@@ -230,21 +226,23 @@ Found a critical Reentrancy vulnerability in the EtherStore contract. The withdr
 https://pastebin.com/J2uK1bCC
 ```
 
-4. Click **Submit** → confirm in MetaMask → wait ~2 minutes
+3. Click **Submit** → confirm in MetaMask
+4. Wait ~2 minutes — AI validators are working
 
 ### Step 3 — View AI Verdict
-
-The screen will show the AI consensus result:
-- **Severity:** CRITICAL (expected)
-- **Reason:** AI's explanation in plain English
-- **Reward:** 5000 GEN locked and ready
+The app displays the consensus result automatically:
+- **CRITICAL** — confirmed reentrancy vulnerability
+- AI reason: *"Bug matches reentrancy in EtherStore withdraw() exactly as shown in project docs."*
+- Reward: **5000 GEN** locked and ready
 
 ### Step 4 — Withdraw Reward
+Click **Withdraw 5000 GEN** → confirm MetaMask → done.
 
-Click **Withdraw 5000 GEN** → confirm MetaMask → funds arrive in your wallet.
+After withdrawal, the app shows: *"Reward already withdrawn."*
 
 ### Verify On-Chain
-Every transaction is verifiable on the GenLayer Explorer:
+Every step is verifiable on the GenLayer Explorer:
+
 🔗 [View Contract](https://explorer-studio.genlayer.com/address/0xbcf9EE06A7Cb5bb74Da57b71F7dBfe4081BA09e3)
 
 > **Note:** Each wallet can only submit once. Use a fresh MetaMask account if testing multiple times.

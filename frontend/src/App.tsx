@@ -77,7 +77,7 @@ export default function App() {
   const [cfgHigh, setCfgHigh] = useState('2000');
   const [cfgMedium, setCfgMedium] = useState('500');
   const [cfgLow, setCfgLow] = useState('100');
-  const [fundAmount, setFundAmount] = useState('10');
+  const [fundAmount, setFundAmount] = useState('1000');
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 

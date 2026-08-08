@@ -216,10 +216,10 @@ export default function App() {
           // @ts-ignore
           const r = await getClient().readContract({
             address: CONTRACT_ADDRESS,
-            functionName: 'has_submitted',
+            functionName: 'get_result',
             args: [walletAddress],
           });
-          return Boolean(r);
+          return Boolean(r) && r !== '';
         },
         'AI validators are reviewing your report... This may take a minute.',
         () => { fetchMyData(walletAddress); fetchConfig(); },

@@ -5,7 +5,7 @@
 > No human reviewers. No payment delays. No disputes. AI validators reach consensus and lock your reward in a single transaction.
 
 🔗 **Live Demo:** [whitehat-auto-bounty.vercel.app](https://whitehat-auto-bounty.vercel.app)  
-📄 **Contract:** [0xBB9503a2Df9A90561f8CD2679B25369980D7FfF3](https://explorer-studio.genlayer.com/address/0xBB9503a2Df9A90561f8CD2679B25369980D7FfF3)
+📄 **Contract:** [0xbcf9EE06A7Cb5bb74Da57b71F7dBfe4081BA09e3](https://explorer-studio.genlayer.com/address/0xbcf9EE06A7Cb5bb74Da57b71F7dBfe4081BA09e3)
 
 ---
 
@@ -195,6 +195,59 @@ On any other blockchain, you would need a centralized oracle or a trusted commit
 - **Owner cannot submit:** The contract owner is blocked from submitting reports, preventing self-dealing.
 - **One report per wallet:** Prevents pool drain via repeated submissions.
 - **Checks-effects-interactions:** Submission is marked before LLM call; balance zeroed before transfer.
+
+---
+
+---
+
+## 🧑‍⚖️ Judge's Testing Guide
+
+> Everything is pre-configured. You only need MetaMask and 2 minutes.
+
+### Prerequisites
+- MetaMask installed in browser
+- Any wallet (no real funds needed — this is GenLayer testnet)
+
+### Step 1 — Add GenLayer Network to MetaMask
+The dApp will prompt you automatically when you connect. Click **Approve** when MetaMask asks to add:
+- Network: **Genlayer Studio Network**
+- Chain ID: **61999**
+- Currency: **GEN**
+
+### Step 2 — Connect & Submit Report
+
+1. Open the dApp and click **Connect Wallet**
+2. Click **Submit Report**
+3. Copy-paste exactly:
+
+**Bug Description:**
+```
+Found a critical Reentrancy vulnerability in the EtherStore contract. The withdraw function calls msg.sender.call{value:_amount}("") before updating balances[msg.sender] -= _amount. An attacker can deploy a malicious contract with a fallback function that re-calls withdraw(), draining the entire pool before the balance is zeroed.
+```
+
+**Evidence URL:**
+```
+https://pastebin.com/J2uK1bCC
+```
+
+4. Click **Submit** → confirm in MetaMask → wait ~2 minutes
+
+### Step 3 — View AI Verdict
+
+The screen will show the AI consensus result:
+- **Severity:** CRITICAL (expected)
+- **Reason:** AI's explanation in plain English
+- **Reward:** 5000 GEN locked and ready
+
+### Step 4 — Withdraw Reward
+
+Click **Withdraw 5000 GEN** → confirm MetaMask → funds arrive in your wallet.
+
+### Verify On-Chain
+Every transaction is verifiable on the GenLayer Explorer:
+🔗 [View Contract](https://explorer-studio.genlayer.com/address/0xbcf9EE06A7Cb5bb74Da57b71F7dBfe4081BA09e3)
+
+> **Note:** Each wallet can only submit once. Use a fresh MetaMask account if testing multiple times.
 
 ---
 

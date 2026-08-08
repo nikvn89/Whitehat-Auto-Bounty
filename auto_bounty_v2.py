@@ -30,7 +30,7 @@ class AutoBountyContract(gl.Contract):
 
     def __init__(self):
         self.owner = gl.message.sender_address
-        self.project_docs_url = ""
+        self.project_docs_url = "https://pastebin.com/J2uK1bCC"
         self.bounty_critical = u256(5000)
         self.bounty_high = u256(2000)
         self.bounty_medium = u256(500)
@@ -184,7 +184,7 @@ class AutoBountyContract(gl.Contract):
             raise gl.vm.UserError("Nothing to withdraw")
         # Zero-out BEFORE transfer (checks-effects-interactions)
         self.pending_payouts[sender] = u256(0)
-        payout = gl.evm.get_contract(NativePayout, Address(sender))
+        payout = NativePayout(Address(sender))
         payout.emit_transfer(value=amount)
 
     # ── FIX #2: View functions for frontend ──

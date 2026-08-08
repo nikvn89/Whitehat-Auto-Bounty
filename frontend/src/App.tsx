@@ -188,7 +188,7 @@ export default function App() {
       attempts++;
       try { if (await condition()) { onDone(); setLoading(false); return; } }
       catch (_) {}
-      if (attempts >= 45) { onDone(); setLoading(false); return; }
+      if (attempts >= 90) { onDone(); setLoading(false); return; }
       setTimeout(poll, 4000);
     };
     setTimeout(poll, 4000);
@@ -539,9 +539,17 @@ export default function App() {
                 )}
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)' }}>
-                <Loader2 size={18} style={{ animation: 'spin 1.2s linear infinite' }} />
-                Report submitted — AI consensus in progress...
+              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                  <Loader2 size={18} style={{ animation: 'spin 1.2s linear infinite' }} />
+                  Report submitted — AI consensus in progress...
+                </div>
+                <button
+                  onClick={() => fetchMyData(walletAddress)}
+                  style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--accent-color)', padding: '0.4rem 1rem', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+                >
+                  <RefreshCw size={14} /> Check Result
+                </button>
               </div>
             )}
           </div>

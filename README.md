@@ -510,8 +510,8 @@ The same architecture can be extended beyond traditional bug bounty programs to 
 ## Deployment
 
 - **Network:** GenLayer Studionet
-- **Intelligent Contract:** `<0x07F92a3705Ef184bd2eC7617E9cbcA78c69ccE83>`
-- **Live App:** `<https://whitehat-auto-bounty.vercel.app/>`
+- **Intelligent Contract:** `0x07F92a3705Ef184bd2eC7617E9cbcA78c69ccE83`
+- **Live App:** <https://whitehat-auto-bounty.vercel.app/>
 
 ---
 

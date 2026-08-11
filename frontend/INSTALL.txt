@@ -1,0 +1,31 @@
+WHITEHAT AUTO BOUNTY FRONTEND OVERLAY
+
+Use with the existing Vite structure shown in your screenshot.
+
+Replace / add:
+- src/App.tsx
+- src/App.css
+- src/index.css
+- src/main.tsx
+- src/lib/config.ts
+- src/lib/genlayer.ts
+- .env.example
+- vite.config.ts
+
+IMPORTANT:
+Create frontend/.env and set:
+VITE_CONTRACT_ADDRESS=<full deployed contract address>
+
+Keep your existing package.json/package-lock.json if it already includes:
+- react
+- react-dom
+- vite
+- typescript
+- genlayer-js
+- viem
+- @vitejs/plugin-react
+
+Then run:
+npm install
+npm run build
+npm run dev

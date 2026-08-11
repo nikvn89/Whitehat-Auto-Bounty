@@ -5,7 +5,7 @@
 > No human reviewers. No payment delays. No disputes. AI validators reach consensus and lock your reward in a single transaction.
 
 🔗 **Live Demo:** [whitehat-auto-bounty.vercel.app](https://whitehat-auto-bounty.vercel.app)  
-📄 **Contract:** [0xbcf9EE06A7Cb5bb74Da57b71F7dBfe4081BA09e3](https://explorer-studio.genlayer.com/address/0xbcf9EE06A7Cb5bb74Da57b71F7dBfe4081BA09e3)
+📄 **Contract:** [0xe3b1BdC4796441341A4c6c0eDCA85E024365156a](https://explorer-studio.genlayer.com/address/0xe3b1BdC4796441341A4c6c0eDCA85E024365156a)
 
 ---
 
@@ -47,9 +47,14 @@ Deploy contract
      ↓
 update_docs_url("https://github.com/your/project")
      ↓
-configure_bounties(critical=5000, high=2000, medium=500, low=100)
+configure_bounties(
+    critical_wei = 5_000_000_000_000_000,
+    high_wei     = 2_000_000_000_000_000,
+    medium_wei   =   500_000_000_000_000,
+    low_wei      =   100_000_000_000_000,
+)
      ↓
-fund_pool()  ← deposit GEN tokens as reward pool
+fund_pool()  ← deposit native token (wei) as reward pool
 ```
 
 ### For Whitehats
@@ -72,19 +77,23 @@ withdraw()  ← pull your reward anytime
 
 ## Severity Levels
 
-| Severity | Default Reward | Example |
-|---|---|---|
-| **CRITICAL** | 5,000 GEN | Unauthorized fund withdrawal, total protocol compromise |
-| **HIGH** | 2,000 GEN | Privilege escalation, significant fund loss |
-| **MEDIUM** | 500 GEN | Partial information leak, griefing attack |
-| **LOW** | 100 GEN | Minor issue with minimal impact |
-| **INVALID** | 0 GEN | Not a bug, out of scope, insufficient evidence |
+All bounty amounts are denominated in **wei** (10⁻¹⁸ native token). 1 GEN = 10¹⁸ wei.
+
+| Severity | Default Reward (wei)  | Default Reward (GEN) | Example |
+|---|---|---|---|
+| **CRITICAL** | 5,000,000,000,000,000 | 0.005 | Unauthorized fund withdrawal, total protocol compromise |
+| **HIGH**     | 2,000,000,000,000,000 | 0.002 | Privilege escalation, significant fund loss |
+| **MEDIUM**   |   500,000,000,000,000 | 0.0005 | Partial information leak, griefing attack |
+| **LOW**      |   100,000,000,000,000 | 0.0001 | Minor issue with minimal impact |
+| **INVALID**  | 0 | 0 | Not a bug, out of scope, insufficient evidence |
+
+Amounts are configured in wei, displayed in the frontend as GEN (`amount_wei / 1e18`).
 
 ---
 
 ## Technical Architecture
 
-### Smart Contract (`auto_bounty.py`)
+### Smart Contract (`auto_bounty_v2.py`)
 
 Built on **GenVM v0.2.16** with the following design decisions:
 
@@ -108,12 +117,26 @@ Validators must agree the output is a valid JSON with one of the five severity v
 **Pull Payment Pattern**
 ```python
 # submit_report: lock the reward
-self.pending_payouts[sender] = u256(amount_to_pay)
+self.pending_payouts[sender] = u256(amount_wei)
 
 # withdraw: hacker claims it
-payout.emit_transfer(value=amount)
+payout.emit_transfer(value=amount_wei)
 ```
 Rewards are locked atomically with the AI verdict. The hacker withdraws on their own schedule — no race conditions, no failed transfers that lose the verdict.
+
+**Pool Balance Check Before Payout**
+```python
+pool_balance = u256(gl.message.contract_value)
+if pool_balance < amount_wei:
+    raise gl.vm.UserError(
+        "Pool underfunded: cannot pay "
+        + str(int(amount_wei))
+        + " wei, pool has "
+        + str(int(pool_balance))
+        + " wei"
+    )
+```
+The contract verifies available pool funds before creating each payout. If underfunded, `withdraw()` reverts with exact amounts — the pending payout is preserved until the owner tops up the pool.
 
 **One Submission Per Wallet**
 ```python
@@ -129,7 +152,7 @@ class NativePayout:
     class Write:
         def emit_transfer(self, value: u256, /) -> None: ...
 ```
-Transfers GEN directly to the hacker's EOA — no wrapped tokens, no intermediate steps.
+Transfers native token directly to the hacker's EOA — no wrapped tokens, no intermediate steps.
 
 ### Frontend
 
@@ -143,8 +166,8 @@ Transfers GEN directly to the hacker's EOA — no wrapped tokens, no intermediat
 ## Running Locally
 
 ```bash
-git clone https://github.com/your/whitehat-auto-bounty
-cd whitehat-auto-bounty
+git clone https://github.com/nikvn89/Whitehat-Auto-Bounty
+cd Whitehat-Auto-Bounty/frontend
 npm install
 npm run dev
 ```
@@ -159,9 +182,9 @@ Open `http://localhost:5173`
 
 | Method | Args | Returns |
 |---|---|---|
-| `get_config` | — | JSON: owner, docs_url, bounty amounts, is_active, reports_count |
-| `get_result` | `addr: str` | JSON: severity, reason, amount |
-| `get_pending_payout` | `addr: str` | Amount in GEN (string) |
+| `get_config` | — | JSON: owner, docs_url, bounty amounts in wei, is_active, reports_count |
+| `get_result` | `addr: str` | JSON: severity, reason, amount_wei |
+| `get_pending_payout` | `addr: str` | Pending amount in wei (string) |
 | `has_submitted` | `addr: str` | bool |
 
 ## Contract Write Methods
@@ -169,10 +192,10 @@ Open `http://localhost:5173`
 | Method | Who | Description |
 |---|---|---|
 | `submit_report(bug_description, evidence_url)` | Anyone | Submit a bug report for AI assessment |
-| `withdraw()` | Hacker | Claim locked reward |
-| `fund_pool()` payable | Owner | Add GEN to reward pool |
+| `withdraw()` | Hacker | Claim locked reward (reverts if pool underfunded) |
+| `fund_pool()` payable | Owner | Add native token to reward pool |
 | `update_docs_url(docs_url)` | Owner | Set project docs/repo link |
-| `configure_bounties(critical, high, medium, low)` | Owner | Set reward amounts |
+| `configure_bounties(critical_wei, high_wei, medium_wei, low_wei)` | Owner | Set reward amounts in wei |
 | `set_active(status)` | Owner | Pause/resume the program |
 
 ---
@@ -195,8 +218,20 @@ On any other blockchain, you would need a centralized oracle or a trusted commit
 - **Owner cannot submit:** The contract owner is blocked from submitting reports, preventing self-dealing.
 - **One report per wallet:** Prevents pool drain via repeated submissions.
 - **Checks-effects-interactions:** Submission is marked before LLM call; balance zeroed before transfer.
+- **Pool balance verified before payout:** `withdraw()` checks contract balance covers the pending amount before calling `emit_transfer`. Reverts with exact wei amounts if underfunded.
 
 ---
+
+## Testing
+
+See [TESTING.md](./TESTING.md) for step-by-step test cases covering:
+
+- Funded pool: configure → fund → submit → withdraw exact configured amount
+- Multiple competing claims from different wallets
+- Underfunded pool: withdraw reverts, pending payout preserved, succeeds after top-up
+- Duplicate submission guard
+- INVALID report produces no payout
+- Unit consistency: `configure_bounties` inputs match `get_config` outputs
 
 ---
 
@@ -232,18 +267,17 @@ https://pastebin.com/J2uK1bCC
 ### Step 3 — View AI Verdict
 The app displays the consensus result automatically:
 - **CRITICAL** — confirmed reentrancy vulnerability
-- AI reason: *"Bug matches reentrancy in EtherStore withdraw() exactly as shown in project docs."*
-- Reward: **5000 GEN** locked and ready
+- Reward locked in wei, displayed as GEN in the frontend
 
 ### Step 4 — Withdraw Reward
-Click **Withdraw 5000 GEN** → confirm MetaMask → done.
+Click **Withdraw** → confirm MetaMask → done.
 
-After withdrawal, the app shows: *"Reward already withdrawn."*
+After withdrawal, `get_pending_payout` returns `"0"`.
 
 ### Verify On-Chain
 Every step is verifiable on the GenLayer Explorer:
 
-🔗 [View Contract](https://explorer-studio.genlayer.com/address/0xbcf9EE06A7Cb5bb74Da57b71F7dBfe4081BA09e3)
+🔗 [View Contract](https://explorer-studio.genlayer.com/address/0xe3b1BdC4796441341A4c6c0eDCA85E024365156a)
 
 > **Note:** Each wallet can only submit once. Use a fresh MetaMask account if testing multiple times.
 

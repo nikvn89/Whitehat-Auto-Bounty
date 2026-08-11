@@ -34,10 +34,10 @@ const explorerAddress = CONTRACT_ADDRESS
   : '#'
 
 const statusCopy = (result: BountyResult | null) => {
-  if (!result) return 'No adjudication loaded'
-  if (result.payout_status === 'RESERVED') return 'Bounty reserved'
-  if (result.payout_status === 'UNDERFUNDED') return 'Valid report — pool underfunded'
-  return 'No payout'
+  if (!result) return 'NO VERDICT'
+  if (result.payout_status === 'RESERVED') return 'RESERVED'
+  if (result.payout_status === 'UNDERFUNDED') return 'UNDERFUNDED'
+  return 'NO PAYOUT'
 }
 
 function App() {
@@ -199,124 +199,104 @@ function App() {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <a className="brand" href="#">
-          <span className="brand-mark">W</span>
-          <span>
-            <strong>Whitehat Auto Bounty</strong>
-            <small>on GenLayer</small>
-          </span>
-        </a>
+      <header className="command-bar">
+        <div className="brand">
+          <div className="brand-symbol">WAB</div>
+          <div>
+            <strong>WHITEHAT AUTO BOUNTY</strong>
+            <span>GENLAYER / SECURITY ADJUDICATION</span>
+          </div>
+        </div>
 
-        <div className="top-actions">
-          <a
-            className="contract-link"
-            href={explorerAddress}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Contract ↗
+        <div className="command-actions">
+          <div className={`live-state ${config?.is_active ? 'online' : 'offline'}`}>
+            <i />
+            {config?.is_active ? 'PROGRAM LIVE' : 'PROGRAM PAUSED'}
+          </div>
+          <a href={explorerAddress} target="_blank" rel="noreferrer" className="text-link">
+            CONTRACT ↗
           </a>
-
-          <button
-            className="button wallet"
-            onClick={connect}
-            disabled={busy !== ''}
-          >
-            {account ? short(account, 6, 4) : busy === 'connect' ? 'Connecting…' : 'Connect wallet'}
+          <button className="connect-btn" onClick={connect} disabled={busy !== ''}>
+            {account ? short(account, 6, 4) : busy === 'connect' ? 'CONNECTING…' : 'CONNECT WALLET'}
           </button>
         </div>
       </header>
 
-      <main className="shell">
-        <section className="hero">
-          <div className="eyebrow">DECENTRALIZED BUG BOUNTY ADJUDICATION</div>
-          <h1>
-            Report the bug.
-            <br />
-            <span>Let consensus price the impact.</span>
-          </h1>
-          <p>
-            Public evidence is evaluated by GenLayer AI validators. Valid reports
-            receive a deterministic bounty tier and backed payouts are reserved
-            before researchers can withdraw.
-          </p>
-
-          <div className="flow">
-            <span>Submit evidence</span>
-            <b>→</b>
-            <span>AI consensus</span>
-            <b>→</b>
-            <span>Severity</span>
-            <b>→</b>
-            <span>Reserve</span>
-            <b>→</b>
-            <span>Withdraw</span>
+      <main className="terminal-shell">
+        <section className="system-strip">
+          <div>
+            <span>NETWORK</span>
+            <strong>GENLAYER STUDIONET</strong>
           </div>
-        </section>
-
-        {notice ? <div className={`notice ${noticeKind}`}>{notice}</div> : null}
-
-        <section className="pool-grid">
-          <div className="metric">
-            <span>Pool balance</span>
+          <div>
+            <span>POOL</span>
             <strong>{formatWei(pool?.balance_wei)} GEN</strong>
-            <small>Total native funds held by the contract</small>
           </div>
-          <div className="metric">
-            <span>Reserved</span>
-            <strong>{formatWei(pool?.reserved_wei)} GEN</strong>
-            <small>Already promised to approved reports</small>
-          </div>
-          <div className="metric accent">
-            <span>Available</span>
+          <div>
+            <span>AVAILABLE</span>
             <strong>{formatWei(pool?.available_wei)} GEN</strong>
-            <small>Can still back new bounty decisions</small>
           </div>
-          <div className="metric">
-            <span>Reports</span>
+          <div>
+            <span>RESERVED</span>
+            <strong>{formatWei(pool?.reserved_wei)} GEN</strong>
+          </div>
+          <div>
+            <span>REPORTS</span>
             <strong>{config?.reports_count ?? 0}</strong>
-            <small>{config?.is_active ? 'Program active' : 'Program paused'}</small>
           </div>
         </section>
 
-        <div className="workspace">
-          <section className="panel">
-            <div className="section-title">
-              <span>01</span>
+        {notice ? <div className={`notice ${noticeKind}`}>[{noticeKind.toUpperCase()}] {notice}</div> : null}
+
+        <section className="intro">
+          <div className="intro-index">01 / INTAKE</div>
+          <h1>Submit evidence.<br /><em>Consensus decides severity.</em></h1>
+          <p>
+            A public bug report enters decentralized review. GenLayer validators
+            evaluate evidence against project documentation, classify impact, and
+            reserve a backed bounty when funds are available.
+          </p>
+        </section>
+
+        <div className="primary-grid">
+          <section className="module report-module">
+            <div className="module-head">
               <div>
-                <h2>Researcher workspace</h2>
-                <p>Submit one public report from the connected wallet.</p>
+                <span className="module-code">REPORT://NEW</span>
+                <h2>Vulnerability intake</h2>
               </div>
+              <span className="module-state">{submitted ? 'LOCKED' : 'READY'}</span>
             </div>
 
-            <form className="form" onSubmit={submit}>
+            <form onSubmit={submit} className="report-form">
               <label>
-                Bug report
+                <span>01 — BUG DESCRIPTION</span>
                 <textarea
-                  rows={7}
+                  rows={10}
                   value={bugDescription}
                   onChange={(event) => setBugDescription(event.target.value)}
-                  placeholder="Describe the issue, affected behavior, exploitability, and impact..."
+                  placeholder="Describe affected behavior, exploitability, impact, and reproduction context..."
                   disabled={submitted || owner}
                 />
               </label>
 
               <label>
-                Public evidence URL
+                <span>02 — PUBLIC EVIDENCE URL</span>
                 <input
                   value={evidenceUrl}
                   onChange={(event) => setEvidenceUrl(event.target.value)}
                   placeholder="https://..."
                   disabled={submitted || owner}
                 />
-                <small>
-                  Use a stable public HTTPS page that validators can render.
-                </small>
               </label>
 
+              <div className="intake-meta">
+                <span>HTTPS PUBLIC EVIDENCE REQUIRED</span>
+                <span>ONE REPORT / WALLET</span>
+              </div>
+
               <button
-                className="button primary full"
+                className="action-btn"
                 type="submit"
                 disabled={
                   busy !== '' ||
@@ -326,172 +306,164 @@ function App() {
                   !config?.is_active
                 }
               >
-                {owner
-                  ? 'Owner cannot submit'
-                  : submitted
-                    ? 'Report already submitted'
-                    : busy === 'submit'
-                      ? 'AI validators adjudicating…'
-                      : 'Submit report to GenLayer'}
+                <span>{busy === 'submit' ? 'VALIDATORS RUNNING' : 'SUBMIT FOR AI REVIEW'}</span>
+                <b>→</b>
               </button>
+
+              {owner ? <div className="inline-warning">OWNER WALLET CANNOT SUBMIT REPORTS</div> : null}
+              {submitted ? <div className="inline-warning">THIS WALLET HAS ALREADY SUBMITTED</div> : null}
             </form>
           </section>
 
-          <section className="panel result-panel">
-            <div className="section-title">
-              <span>02</span>
+          <aside className="module bounty-module">
+            <div className="module-head">
               <div>
-                <h2>Adjudication result</h2>
-                <p>Accepted state for the connected researcher.</p>
+                <span className="module-code">POLICY://BOUNTY</span>
+                <h2>Reward matrix</h2>
               </div>
             </div>
 
-            {!account ? (
-              <div className="empty">
-                Connect a researcher wallet to load its report and payout state.
+            <div className="severity-table">
+              <div className="severity-row critical">
+                <span><i /> CRITICAL</span>
+                <strong>{formatWei(config?.bounty_critical_wei)} GEN</strong>
               </div>
-            ) : !result ? (
-              <div className="empty">
-                No adjudication result exists for {short(account)}.
+              <div className="severity-row high">
+                <span><i /> HIGH</span>
+                <strong>{formatWei(config?.bounty_high_wei)} GEN</strong>
               </div>
-            ) : (
-              <div className="result-card">
-                <div className="result-head">
-                  <div>
-                    <small>Severity</small>
-                    <strong className={`severity ${result.severity.toLowerCase()}`}>
-                      {result.severity}
-                    </strong>
-                  </div>
-                  <span className={`payout-status ${result.payout_status.toLowerCase()}`}>
-                    {statusCopy(result)}
-                  </span>
-                </div>
-
-                <div className="bounty-amount">
-                  <span>Adjudicated bounty</span>
-                  <strong>{amountGen} GEN</strong>
-                </div>
-
-                <div className="reason">
-                  <span>Consensus reason</span>
-                  <p>{result.reason}</p>
-                </div>
-
-                <div className="pending">
-                  <div>
-                    <span>Withdrawable now</span>
-                    <strong>{pendingGen} GEN</strong>
-                  </div>
-
-                  <button
-                    className="button primary"
-                    onClick={withdraw}
-                    disabled={busy !== '' || BigInt(pendingWei || '0') <= BigInt(0)}
-                  >
-                    {busy === 'withdraw' ? 'Withdrawing…' : 'Withdraw bounty'}
-                  </button>
-                </div>
-
-                {result.payout_status === 'UNDERFUNDED' ? (
-                  <div className="underfunded">
-                    The report is valid, but this pool does not currently have
-                    enough unreserved funds to back the configured bounty.
-                  </div>
-                ) : null}
+              <div className="severity-row medium">
+                <span><i /> MEDIUM</span>
+                <strong>{formatWei(config?.bounty_medium_wei)} GEN</strong>
               </div>
-            )}
+              <div className="severity-row low">
+                <span><i /> LOW</span>
+                <strong>{formatWei(config?.bounty_low_wei)} GEN</strong>
+              </div>
+              <div className="severity-row invalid">
+                <span><i /> INVALID</span>
+                <strong>0 GEN</strong>
+              </div>
+            </div>
 
-            <button
-              className="button ghost full refresh"
-              onClick={() =>
-                run('refresh', async () => {
-                  await refresh(account)
-                  setNoticeKind('info')
-                  setNotice('Accepted onchain state refreshed.')
-                })
-              }
-              disabled={busy !== ''}
-            >
-              {busy === 'refresh' ? 'Refreshing…' : 'Refresh accepted state'}
-            </button>
-          </section>
+            <div className="fund-meter">
+              <div className="meter-label">
+                <span>POOL ACCOUNTING</span>
+                <span>{formatWei(pool?.available_wei)} AVAILABLE</span>
+              </div>
+              <div className="meter"><div style={{
+                width: `${Math.min(100, Number(pool?.balance_wei || 0) > 0
+                  ? (Number(pool?.available_wei || 0) / Number(pool?.balance_wei || 1)) * 100
+                  : 0)}%`
+              }} /></div>
+              <p>Reserved rewards are removed from available liquidity before new bounty decisions.</p>
+            </div>
+          </aside>
         </div>
 
-        <section className="policy">
-          <div>
-            <div className="eyebrow">BOUNTY POLICY</div>
-            <h2>Severity becomes deterministic settlement.</h2>
+        <section className="module verdict-module">
+          <div className="module-head">
+            <div>
+              <span className="module-code">CONSENSUS://RESULT</span>
+              <h2>AI adjudication & settlement</h2>
+            </div>
+            <button
+              className="refresh-btn"
+              onClick={() => run('refresh', async () => {
+                await refresh(account)
+                setNoticeKind('info')
+                setNotice('Accepted onchain state refreshed.')
+              })}
+              disabled={busy !== ''}
+            >
+              {busy === 'refresh' ? 'REFRESHING…' : 'REFRESH STATE ↻'}
+            </button>
           </div>
 
-          <div className="tiers">
-            <div><span>Critical</span><strong>{formatWei(config?.bounty_critical_wei)} GEN</strong></div>
-            <div><span>High</span><strong>{formatWei(config?.bounty_high_wei)} GEN</strong></div>
-            <div><span>Medium</span><strong>{formatWei(config?.bounty_medium_wei)} GEN</strong></div>
-            <div><span>Low</span><strong>{formatWei(config?.bounty_low_wei)} GEN</strong></div>
-            <div><span>Invalid</span><strong>0 GEN</strong></div>
-          </div>
+          {!account ? (
+            <div className="empty-state">
+              <span>NO WALLET SESSION</span>
+              <p>Connect a researcher wallet to inspect its adjudication and settlement state.</p>
+            </div>
+          ) : !result ? (
+            <div className="empty-state">
+              <span>NO VERDICT FOUND</span>
+              <p>No adjudication result exists for {short(account)}.</p>
+            </div>
+          ) : (
+            <div className="verdict-grid">
+              <div className="verdict-primary">
+                <span className="data-label">SEVERITY</span>
+                <div className={`verdict-severity ${result.severity.toLowerCase()}`}>
+                  {result.severity}
+                </div>
+                <div className="verdict-status">{statusCopy(result)}</div>
+              </div>
+
+              <div className="verdict-data">
+                <div>
+                  <span className="data-label">ADJUDICATED BOUNTY</span>
+                  <strong>{amountGen} GEN</strong>
+                </div>
+                <div>
+                  <span className="data-label">WITHDRAWABLE</span>
+                  <strong>{pendingGen} GEN</strong>
+                </div>
+                <div className="reason-block">
+                  <span className="data-label">CONSENSUS REASON</span>
+                  <p>{result.reason}</p>
+                </div>
+              </div>
+
+              <div className="settlement">
+                <span className="data-label">SETTLEMENT</span>
+                <button
+                  className="claim-btn"
+                  onClick={withdraw}
+                  disabled={busy !== '' || BigInt(pendingWei || '0') <= BigInt(0)}
+                >
+                  {busy === 'withdraw' ? 'PROCESSING…' : `WITHDRAW ${pendingGen} GEN`}
+                </button>
+                {result.payout_status === 'UNDERFUNDED' ? (
+                  <p className="underfunded">VALID REPORT / INSUFFICIENT AVAILABLE POOL</p>
+                ) : null}
+              </div>
+            </div>
+          )}
         </section>
 
         {owner ? (
-          <section className="owner-panel">
-            <div className="section-title">
-              <span>03</span>
+          <section className="owner-console">
+            <div className="owner-title">
               <div>
-                <h2>Owner console</h2>
-                <p>Pool operations and program policy.</p>
+                <span className="module-code">ADMIN://OWNER</span>
+                <h2>Program controls</h2>
               </div>
+              <span>{short(account)}</span>
             </div>
 
             <div className="owner-grid">
-              <form className="owner-card" onSubmit={fund}>
-                <h3>Fund bounty pool</h3>
+              <form onSubmit={fund}>
                 <label>
-                  GEN amount
-                  <input
-                    value={fundAmount}
-                    onChange={(event) => setFundAmount(event.target.value)}
-                    inputMode="decimal"
-                    placeholder="5"
-                  />
+                  <span>FUND POOL / GEN</span>
+                  <input value={fundAmount} onChange={(e) => setFundAmount(e.target.value)} />
                 </label>
-                <button className="button primary full" disabled={busy !== ''}>
-                  {busy === 'fund' ? 'Funding…' : 'Fund pool'}
-                </button>
+                <button disabled={busy !== ''}>FUND POOL</button>
               </form>
 
-              <form className="owner-card" onSubmit={updateDocs}>
-                <h3>Project documentation</h3>
+              <form onSubmit={updateDocs}>
                 <label>
-                  Public docs URL
-                  <input
-                    value={docsUrl}
-                    onChange={(event) => setDocsUrl(event.target.value)}
-                    placeholder="https://..."
-                  />
+                  <span>PROJECT DOCS URL</span>
+                  <input value={docsUrl} onChange={(e) => setDocsUrl(e.target.value)} />
                 </label>
-                <button className="button ghost full" disabled={busy !== ''}>
-                  {busy === 'docs' ? 'Updating…' : 'Update docs URL'}
-                </button>
+                <button disabled={busy !== ''}>UPDATE DOCS</button>
               </form>
 
-              <div className="owner-card">
-                <h3>Program status</h3>
-                <p>
-                  {config?.is_active
-                    ? 'New reports are currently accepted.'
-                    : 'New reports are currently paused.'}
-                </p>
-                <button
-                  className="button ghost full"
-                  onClick={toggleProgram}
-                  disabled={busy !== ''}
-                >
-                  {busy === 'toggle'
-                    ? 'Updating…'
-                    : config?.is_active
-                      ? 'Pause program'
-                      : 'Activate program'}
+              <div className="owner-control">
+                <span>PROGRAM STATE</span>
+                <strong>{config?.is_active ? 'ACTIVE' : 'PAUSED'}</strong>
+                <button onClick={toggleProgram} disabled={busy !== ''}>
+                  {config?.is_active ? 'PAUSE PROGRAM' : 'ACTIVATE PROGRAM'}
                 </button>
               </div>
             </div>
@@ -500,11 +472,8 @@ function App() {
       </main>
 
       <footer>
-        <div>
-          <strong>Whitehat Auto Bounty</strong>
-          <span>AI adjudication + reserved native settlement on GenLayer</span>
-        </div>
-        <span>{CONTRACT_ADDRESS ? short(CONTRACT_ADDRESS, 10, 8) : 'Set VITE_CONTRACT_ADDRESS'}</span>
+        <span>WHITEHAT AUTO BOUNTY / GENLAYER STUDIONET</span>
+        <span>{CONTRACT_ADDRESS ? short(CONTRACT_ADDRESS, 10, 8) : 'CONTRACT NOT CONFIGURED'}</span>
       </footer>
     </div>
   )

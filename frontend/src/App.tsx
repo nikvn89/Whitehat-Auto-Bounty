@@ -522,7 +522,20 @@ function App() {
                 <span className="data-label">SETTLEMENT</span>
                 {result.payout_status === 'RESERVED' &&
                 BigInt(pendingWei || '0') <= BigInt(0) ? (
-                  <div className="claim-btn claimed">
+                  <div
+                    className="claim-btn claimed"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      minHeight: '62px',
+                      padding: '0 18px',
+                      textAlign: 'center',
+                      lineHeight: 1,
+                      boxSizing: 'border-box',
+                    }}
+                  >
                     ✓ {amountGen} GEN CLAIMED
                   </div>
                 ) : BigInt(pendingWei || '0') > BigInt(0) ? (

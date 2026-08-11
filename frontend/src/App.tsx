@@ -36,8 +36,16 @@ const explorerAddress = contractConfigured
   ? `${EXPLORER_BASE}/address/${CONTRACT_ADDRESS}`
   : '#'
 
-const statusCopy = (result: BountyResult | null) => {
+const statusCopy = (result: BountyResult | null, pendingWei = '0') => {
   if (!result) return 'NO VERDICT'
+
+  if (
+    result.payout_status === 'RESERVED' &&
+    BigInt(pendingWei || '0') <= BigInt(0)
+  ) {
+    return 'PAID'
+  }
+
   if (result.payout_status === 'RESERVED') return 'RESERVED'
   if (result.payout_status === 'UNDERFUNDED') return 'UNDERFUNDED'
   return 'NO PAYOUT'
@@ -492,7 +500,7 @@ function App() {
                 <div className={`verdict-severity ${result.severity.toLowerCase()}`}>
                   {result.severity}
                 </div>
-                <div className="verdict-status">{statusCopy(result)}</div>
+                <div className="verdict-status">{statusCopy(result, pendingWei)}</div>
               </div>
 
               <div className="verdict-data">
@@ -512,15 +520,22 @@ function App() {
 
               <div className="settlement">
                 <span className="data-label">SETTLEMENT</span>
-                <button
-                  className="claim-btn"
-                  onClick={withdraw}
-                  disabled={busy !== '' || BigInt(pendingWei || '0') <= BigInt(0)}
-                >
-                  {busy === 'withdraw'
-                    ? 'PROCESSING…'
-                    : `WITHDRAW ${pendingGen} GEN`}
-                </button>
+                {result.payout_status === 'RESERVED' &&
+                BigInt(pendingWei || '0') <= BigInt(0) ? (
+                  <div className="claim-btn claimed">
+                    ✓ {amountGen} GEN CLAIMED
+                  </div>
+                ) : BigInt(pendingWei || '0') > BigInt(0) ? (
+                  <button
+                    className="claim-btn"
+                    onClick={withdraw}
+                    disabled={busy !== ''}
+                  >
+                    {busy === 'withdraw'
+                      ? 'PROCESSING…'
+                      : `WITHDRAW ${pendingGen} GEN`}
+                  </button>
+                ) : null}
 
                 {result.payout_status === 'UNDERFUNDED' ? (
                   <p className="underfunded">

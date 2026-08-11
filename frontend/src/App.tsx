@@ -1,14 +1,17 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import './App.css'
 import { CONTRACT_ADDRESS, EXPLORER_BASE } from './lib/config'
 import {
-  BountyConfig,
-  BountyResult,
-  PoolStatus,
   bounty,
   connectWallet,
   formatWei,
   parseGenToWei,
+} from './lib/genlayer'
+import type {
+  BountyConfig,
+  BountyResult,
+  PoolStatus,
 } from './lib/genlayer'
 
 type Busy =

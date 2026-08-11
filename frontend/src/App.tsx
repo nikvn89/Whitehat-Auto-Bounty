@@ -29,7 +29,10 @@ const short = (value: string, head = 7, tail = 5) =>
     ? `${value.slice(0, head)}…${value.slice(-tail)}`
     : value
 
-const explorerAddress = CONTRACT_ADDRESS
+const contractConfigured =
+  Boolean(CONTRACT_ADDRESS) && /^0x[a-fA-F0-9]{40}$/.test(CONTRACT_ADDRESS)
+
+const explorerAddress = contractConfigured
   ? `${EXPLORER_BASE}/address/${CONTRACT_ADDRESS}`
   : '#'
 
@@ -80,6 +83,15 @@ function App() {
   }
 
   const refresh = useCallback(async (address = account) => {
+    if (!contractConfigured) {
+      setConfig(null)
+      setPool(null)
+      setResult(null)
+      setPendingWei('0')
+      setSubmitted(false)
+      return
+    }
+
     const [nextConfig, nextPool] = await Promise.all([
       bounty.getConfig(),
       bounty.getPoolStatus(),
@@ -103,6 +115,8 @@ function App() {
   }, [account])
 
   useEffect(() => {
+    if (!contractConfigured) return
+
     void refresh('').catch((error) => {
       setNoticeKind('error')
       setNotice(error instanceof Error ? error.message : 'Unable to read contract state.')
@@ -111,6 +125,10 @@ function App() {
 
   const connect = () =>
     run('connect', async () => {
+      if (!contractConfigured) {
+        throw new Error('Contract address is not configured for this deployment.')
+      }
+
       const address = await connectWallet()
       setAccount(address)
       await refresh(address)
@@ -122,6 +140,7 @@ function App() {
     event.preventDefault()
 
     return run('submit', async () => {
+      if (!contractConfigured) throw new Error('Contract address is not configured.')
       if (!account) throw new Error('Connect wallet first.')
       if (!bugDescription.trim()) throw new Error('Describe the report first.')
       if (!evidenceUrl.startsWith('https://')) {
@@ -142,6 +161,7 @@ function App() {
 
   const withdraw = () =>
     run('withdraw', async () => {
+      if (!contractConfigured) throw new Error('Contract address is not configured.')
       if (!account) throw new Error('Connect wallet first.')
       if (BigInt(pendingWei || '0') <= BigInt(0)) {
         throw new Error('No reserved payout is available for this wallet.')
@@ -211,13 +231,32 @@ function App() {
         <div className="command-actions">
           <div className={`live-state ${config?.is_active ? 'online' : 'offline'}`}>
             <i />
-            {config?.is_active ? 'PROGRAM LIVE' : 'PROGRAM PAUSED'}
+            {!contractConfigured
+              ? 'SETUP REQUIRED'
+              : config?.is_active
+                ? 'PROGRAM LIVE'
+                : 'PROGRAM PAUSED'}
           </div>
-          <a href={explorerAddress} target="_blank" rel="noreferrer" className="text-link">
+
+          <a
+            href={explorerAddress}
+            target={contractConfigured ? '_blank' : undefined}
+            rel="noreferrer"
+            className={`text-link ${!contractConfigured ? 'disabled-link' : ''}`}
+          >
             CONTRACT ↗
           </a>
-          <button className="connect-btn" onClick={connect} disabled={busy !== ''}>
-            {account ? short(account, 6, 4) : busy === 'connect' ? 'CONNECTING…' : 'CONNECT WALLET'}
+
+          <button
+            className="connect-btn"
+            onClick={connect}
+            disabled={busy !== '' || !contractConfigured}
+          >
+            {account
+              ? short(account, 6, 4)
+              : busy === 'connect'
+                ? 'CONNECTING…'
+                : 'CONNECT WALLET'}
           </button>
         </div>
       </header>
@@ -246,11 +285,32 @@ function App() {
           </div>
         </section>
 
-        {notice ? <div className={`notice ${noticeKind}`}>[{noticeKind.toUpperCase()}] {notice}</div> : null}
+        {!contractConfigured ? (
+          <div className="setup-banner">
+            <div>
+              <strong>CONTRACT SETUP REQUIRED</strong>
+              <span>
+                Add <code>VITE_CONTRACT_ADDRESS</code> to Vercel Environment Variables,
+                then redeploy.
+              </span>
+            </div>
+            <span className="setup-badge">NOT CONNECTED</span>
+          </div>
+        ) : null}
+
+        {notice ? (
+          <div className={`notice ${noticeKind}`}>
+            [{noticeKind.toUpperCase()}] {notice}
+          </div>
+        ) : null}
 
         <section className="intro">
           <div className="intro-index">01 / INTAKE</div>
-          <h1>Submit evidence.<br /><em>Consensus decides severity.</em></h1>
+          <h1>
+            Submit evidence.
+            <br />
+            <em>Consensus decides severity.</em>
+          </h1>
           <p>
             A public bug report enters decentralized review. GenLayer validators
             evaluate evidence against project documentation, classify impact, and
@@ -276,7 +336,7 @@ function App() {
                   value={bugDescription}
                   onChange={(event) => setBugDescription(event.target.value)}
                   placeholder="Describe affected behavior, exploitability, impact, and reproduction context..."
-                  disabled={submitted || owner}
+                  disabled={submitted || owner || !contractConfigured}
                 />
               </label>
 
@@ -286,7 +346,7 @@ function App() {
                   value={evidenceUrl}
                   onChange={(event) => setEvidenceUrl(event.target.value)}
                   placeholder="https://..."
-                  disabled={submitted || owner}
+                  disabled={submitted || owner || !contractConfigured}
                 />
               </label>
 
@@ -300,18 +360,31 @@ function App() {
                 type="submit"
                 disabled={
                   busy !== '' ||
+                  !contractConfigured ||
                   !account ||
                   submitted ||
                   owner ||
                   !config?.is_active
                 }
               >
-                <span>{busy === 'submit' ? 'VALIDATORS RUNNING' : 'SUBMIT FOR AI REVIEW'}</span>
+                <span>
+                  {busy === 'submit'
+                    ? 'VALIDATORS RUNNING'
+                    : 'SUBMIT FOR AI REVIEW'}
+                </span>
                 <b>→</b>
               </button>
 
-              {owner ? <div className="inline-warning">OWNER WALLET CANNOT SUBMIT REPORTS</div> : null}
-              {submitted ? <div className="inline-warning">THIS WALLET HAS ALREADY SUBMITTED</div> : null}
+              {owner ? (
+                <div className="inline-warning">
+                  OWNER WALLET CANNOT SUBMIT REPORTS
+                </div>
+              ) : null}
+              {submitted ? (
+                <div className="inline-warning">
+                  THIS WALLET HAS ALREADY SUBMITTED
+                </div>
+              ) : null}
             </form>
           </section>
 
@@ -351,12 +424,24 @@ function App() {
                 <span>POOL ACCOUNTING</span>
                 <span>{formatWei(pool?.available_wei)} AVAILABLE</span>
               </div>
-              <div className="meter"><div style={{
-                width: `${Math.min(100, Number(pool?.balance_wei || 0) > 0
-                  ? (Number(pool?.available_wei || 0) / Number(pool?.balance_wei || 1)) * 100
-                  : 0)}%`
-              }} /></div>
-              <p>Reserved rewards are removed from available liquidity before new bounty decisions.</p>
+              <div className="meter">
+                <div
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Number(pool?.balance_wei || 0) > 0
+                        ? (Number(pool?.available_wei || 0) /
+                            Number(pool?.balance_wei || 1)) *
+                          100
+                        : 0,
+                    )}%`,
+                  }}
+                />
+              </div>
+              <p>
+                Reserved rewards are removed from available liquidity before new
+                bounty decisions.
+              </p>
             </div>
           </aside>
         </div>
@@ -369,21 +454,31 @@ function App() {
             </div>
             <button
               className="refresh-btn"
-              onClick={() => run('refresh', async () => {
-                await refresh(account)
-                setNoticeKind('info')
-                setNotice('Accepted onchain state refreshed.')
-              })}
-              disabled={busy !== ''}
+              onClick={() =>
+                run('refresh', async () => {
+                  await refresh(account)
+                  setNoticeKind('info')
+                  setNotice('Accepted onchain state refreshed.')
+                })
+              }
+              disabled={busy !== '' || !contractConfigured}
             >
               {busy === 'refresh' ? 'REFRESHING…' : 'REFRESH STATE ↻'}
             </button>
           </div>
 
-          {!account ? (
+          {!contractConfigured ? (
+            <div className="empty-state">
+              <span>CONTRACT NOT CONNECTED</span>
+              <p>Configure the deployment address to load live onchain state.</p>
+            </div>
+          ) : !account ? (
             <div className="empty-state">
               <span>NO WALLET SESSION</span>
-              <p>Connect a researcher wallet to inspect its adjudication and settlement state.</p>
+              <p>
+                Connect a researcher wallet to inspect its adjudication and
+                settlement state.
+              </p>
             </div>
           ) : !result ? (
             <div className="empty-state">
@@ -422,10 +517,15 @@ function App() {
                   onClick={withdraw}
                   disabled={busy !== '' || BigInt(pendingWei || '0') <= BigInt(0)}
                 >
-                  {busy === 'withdraw' ? 'PROCESSING…' : `WITHDRAW ${pendingGen} GEN`}
+                  {busy === 'withdraw'
+                    ? 'PROCESSING…'
+                    : `WITHDRAW ${pendingGen} GEN`}
                 </button>
+
                 {result.payout_status === 'UNDERFUNDED' ? (
-                  <p className="underfunded">VALID REPORT / INSUFFICIENT AVAILABLE POOL</p>
+                  <p className="underfunded">
+                    VALID REPORT / INSUFFICIENT AVAILABLE POOL
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -446,7 +546,10 @@ function App() {
               <form onSubmit={fund}>
                 <label>
                   <span>FUND POOL / GEN</span>
-                  <input value={fundAmount} onChange={(e) => setFundAmount(e.target.value)} />
+                  <input
+                    value={fundAmount}
+                    onChange={(e) => setFundAmount(e.target.value)}
+                  />
                 </label>
                 <button disabled={busy !== ''}>FUND POOL</button>
               </form>
@@ -454,7 +557,10 @@ function App() {
               <form onSubmit={updateDocs}>
                 <label>
                   <span>PROJECT DOCS URL</span>
-                  <input value={docsUrl} onChange={(e) => setDocsUrl(e.target.value)} />
+                  <input
+                    value={docsUrl}
+                    onChange={(e) => setDocsUrl(e.target.value)}
+                  />
                 </label>
                 <button disabled={busy !== ''}>UPDATE DOCS</button>
               </form>
@@ -473,7 +579,11 @@ function App() {
 
       <footer>
         <span>WHITEHAT AUTO BOUNTY / GENLAYER STUDIONET</span>
-        <span>{CONTRACT_ADDRESS ? short(CONTRACT_ADDRESS, 10, 8) : 'CONTRACT NOT CONFIGURED'}</span>
+        <span>
+          {contractConfigured
+            ? short(CONTRACT_ADDRESS, 10, 8)
+            : 'CONTRACT SETUP REQUIRED'}
+        </span>
       </footer>
     </div>
   )

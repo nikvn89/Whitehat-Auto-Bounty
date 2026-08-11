@@ -1,0 +1,3 @@
+VITE_CONTRACT_ADDRESS=0xPASTE_FULL_AUTObounty_CONTRACT_ADDRESS_HERE
+VITE_STUDIO_RPC=https://studio.genlayer.com/api
+VITE_EXPLORER_BASE=https://explorer-studio.genlayer.com
